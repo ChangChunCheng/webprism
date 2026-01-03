@@ -82,7 +82,9 @@ testdata/*
 
 # Documentation - ignore development process files
 docs/archive/
-docs/development/
+docs/development/*
+!docs/development/CONTRIBUTING.md
+!docs/development/CURRENT_STATUS.md
 docs/review/
 docs/DOCUMENTATION_READY.md
 
@@ -90,6 +92,7 @@ docs/DOCUMENTATION_READY.md
 docs/testing/*
 !docs/testing/README.md
 !docs/testing/QUICK_START.md
+!docs/testing/COMPLETION_SUMMARY.md
 
 # Claude Code temporary files
 .tasks/
