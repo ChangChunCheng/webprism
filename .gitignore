@@ -1,0 +1,95 @@
+# Binaries
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage*.out
+coverage*.html
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories
+vendor/
+
+# Generated files (protobuf)
+# Note: Generated code is not committed - regenerate with: make proto
+gen/
+
+# Generated mocks
+internal/mocks/
+
+# Third-party dependencies (downloaded via setup script)
+third_party/
+!third_party/.gitkeep
+!third_party/README.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.claude/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+._*
+
+# Logs
+*.log
+logs/
+server.log
+webprism.log
+
+# Build artifacts
+dist/
+build/
+
+# Temporary files
+tmp/
+temp/
+/tmp/
+
+# Test artifacts
+*.test.db
+
+# Testdata - 預設不提交測試檔案
+# 只明確加入已驗證的範例檔案
+testdata/*
+!testdata/.gitkeep
+!testdata/README.md
+!testdata/petstore-simple.json
+
+# Database (local development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Documentation - ignore development process files
+docs/archive/
+docs/development/
+docs/review/
+docs/DOCUMENTATION_READY.md
+
+# Testing - keep only essential docs
+docs/testing/*
+!docs/testing/README.md
+!docs/testing/QUICK_START.md
+
+# Claude Code temporary files
+.tasks/

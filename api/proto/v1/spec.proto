@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package webprism.v1;
+
+option go_package = "github.com/ChangChunCheng/webprism/gen/go/v1;webprismv1";
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+import "v1/auth.proto";
+
+// SpecService - API 規格管理服務
+service SpecService {
+  // 上傳 API 規格
+  rpc UploadSpec(UploadSpecRequest) returns (UploadSpecResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/specs"
+      body: "*"
+    };
+  }
+
+  // 列出所有規格
+  rpc ListSpecs(ListSpecsRequest) returns (ListSpecsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/specs"
+    };
+  }
+
+  // 獲取規格詳情
+  rpc GetSpec(GetSpecRequest) returns (GetSpecResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/specs/{id}"
+    };
+  }
+
+  // 刪除規格
+  rpc DeleteSpec(DeleteSpecRequest) returns (DeleteSpecResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/specs/{id}"
+    };
+  }
+}
+
+// ========== Messages ==========
+
+// UploadSpecRequest - 上傳規格請求
+message UploadSpecRequest {
+  string name = 1;             // API 名稱
+  string spec_content = 2;     // OpenAPI 規格內容（JSON 或 YAML）
+  SpecFormat format = 3;       // 格式類型
+}
+
+// SpecFormat - 規格格式
+enum SpecFormat {
+  SPEC_FORMAT_UNSPECIFIED = 0;
+  SPEC_FORMAT_JSON = 1;
+  SPEC_FORMAT_YAML = 2;
+}
+
+// UploadSpecResponse - 上傳規格回應
+message UploadSpecResponse {
+  APISpec spec = 1;
+}
+
+// ListSpecsRequest - 列出規格請求
+message ListSpecsRequest {
+  int32 page = 1;              // 頁碼（從 1 開始）
+  int32 page_size = 2;         // 每頁數量
+}
+
+// ListSpecsResponse - 列出規格回應
+message ListSpecsResponse {
+  repeated APISpec specs = 1;
+  int32 total = 2;             // 總數量
+}
+
+// GetSpecRequest - 獲取規格請求
+message GetSpecRequest {
+  string id = 1;               // 規格 ID
+}
+
+// GetSpecResponse - 獲取規格回應
+message GetSpecResponse {
+  APISpec spec = 1;
+  AuthConfig auth_config = 2;  // 關聯的認證配置（如果有）
+}
+
+// DeleteSpecRequest - 刪除規格請求
+message DeleteSpecRequest {
+  string id = 1;
+}
+
+// DeleteSpecResponse - 刪除規格回應
+message DeleteSpecResponse {
+  bool success = 1;
+}
+
+// APISpec - API 規格
+message APISpec {
+  string id = 1;                              // UUID
+  string name = 2;                            // API 名稱
+  string version = 3;                         // 版本
+  string base_url = 4;                        // 基礎 URL
+  google.protobuf.Timestamp created_at = 5;   // 建立時間
+  google.protobuf.Timestamp updated_at = 6;   // 更新時間
+}
+
+// AuthConfig - 認證配置（簡化版，不包含敏感資訊）
+// 注意: AuthType 定義在 auth.proto 中
+message AuthConfig {
+  string spec_id = 1;
+  AuthType auth_type = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}

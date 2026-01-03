@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: webprism-postgres
+    environment:
+      POSTGRES_USER: webprism
+      POSTGRES_PASSWORD: webprism
+      POSTGRES_DB: webprism
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webprism"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build: .
+    container_name: webprism-server
+    environment:
+      - WEBPRISM_DATABASE_HOST=postgres
+      - WEBPRISM_DATABASE_PORT=5432
+      - WEBPRISM_DATABASE_USER=webprism
+      - WEBPRISM_DATABASE_PASSWORD=webprism
+      - WEBPRISM_DATABASE_DATABASE=webprism
+      - WEBPRISM_SECURITY_ENCRYPTION_KEY=dev-key-12345678901234567890123
+    ports:
+      - "8080:8080"  # HTTP
+      - "9090:9090"  # gRPC
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["./webprism-server"]
+
+  mcp:
+    build: .
+    container_name: webprism-mcp
+    environment:
+      - WEBPRISM_DATABASE_HOST=postgres
+      - WEBPRISM_DATABASE_PORT=5432
+      - WEBPRISM_DATABASE_USER=webprism
+      - WEBPRISM_DATABASE_PASSWORD=webprism
+      - WEBPRISM_DATABASE_DATABASE=webprism
+      - WEBPRISM_SECURITY_ENCRYPTION_KEY=dev-key-12345678901234567890123
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["./webprism-mcp"]
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:

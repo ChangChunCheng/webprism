@@ -1,0 +1,44 @@
+# WEBPRISM Configuration File
+# This file contains NON-SENSITIVE configuration that can be committed to Git.
+# Sensitive values (passwords, keys) should be set via environment variables.
+# Environment variables with prefix WEBPRISM_ will override these values.
+
+server:
+  http:
+    port: 8080
+    read_timeout: 30s
+    write_timeout: 30s
+    shutdown_timeout: 10s
+  grpc:
+    port: 9090
+
+database:
+  host: localhost
+  port: 5432
+  user: webprism
+  # password: Set via WEBPRISM_DATABASE_PASSWORD environment variable
+  database: webprism
+  ssl_mode: disable
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: 5m
+
+security:
+  # CRITICAL: encryption_key MUST be set via environment variable:
+  # export WEBPRISM_SECURITY_ENCRYPTION_KEY="your-32-byte-key-here-exactly"
+  #
+  # Generate a secure key with:
+  # openssl rand -base64 32 | head -c 32
+  #
+  # The key must be exactly 32 bytes for AES-256 encryption
+  # encryption_key: Set via WEBPRISM_SECURITY_ENCRYPTION_KEY
+
+logging:
+  level: info        # debug, info, warn, error
+  format: json       # json, console
+  output_path: stdout # stdout, stderr, or file path
+
+mcp:
+  enabled: true
+  name: webprism
+  version: 1.0.0

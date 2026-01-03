@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 資料庫
+  postgres:
+    image: postgres:16-alpine
+    container_name: webprism-postgres
+    environment:
+      POSTGRES_USER: ${WEBPRISM_DATABASE_USER:-webprism}
+      POSTGRES_PASSWORD: ${WEBPRISM_DATABASE_PASSWORD:-webprism}
+      POSTGRES_DB: ${WEBPRISM_DATABASE_DATABASE:-webprism}
+    ports:
+      - "${WEBPRISM_DATABASE_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${WEBPRISM_DATABASE_USER:-webprism}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - webprism-network
+
+  # WEBPRISM 服務 (可選)
+  webprism:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webprism-server
+    environment:
+      WEBPRISM_DATABASE_HOST: postgres
+      WEBPRISM_DATABASE_PORT: 5432
+      WEBPRISM_DATABASE_USER: ${WEBPRISM_DATABASE_USER:-webprism}
+      WEBPRISM_DATABASE_PASSWORD: ${WEBPRISM_DATABASE_PASSWORD:-webprism}
+      WEBPRISM_DATABASE_DATABASE: ${WEBPRISM_DATABASE_DATABASE:-webprism}
+      WEBPRISM_SECURITY_ENCRYPTION_KEY: ${WEBPRISM_SECURITY_ENCRYPTION_KEY}
+    ports:
+      - "${WEBPRISM_SERVER_HTTP_PORT:-8080}:8080"
+      - "${WEBPRISM_SERVER_GRPC_PORT:-9090}:9090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - webprism-network
+    profiles:
+      - full  # 使用 profile 讓此服務可選
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  webprism-network:
+    driver: bridge

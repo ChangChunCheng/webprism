@@ -1,0 +1,2 @@
+# This file ensures the third_party/ directory is tracked by git
+# Third-party dependencies are downloaded via: ./scripts/setup-third-party.sh

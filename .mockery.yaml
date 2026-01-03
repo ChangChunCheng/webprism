@@ -1,0 +1,13 @@
+with-expecter: true
+dir: "internal/mocks"
+outpkg: mocks
+packages:
+  github.com/ChangChunCheng/webprism/internal/ports/output:
+    interfaces:
+      SpecRepository:
+      AuthRepository:
+      HealthRepository:
+      HTTPClient:
+      HTTPRequestBuilder:
+      OpenAPIParser:
+      CryptoService:

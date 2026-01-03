@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package webprism.v1;
+
+option go_package = "github.com/ChangChunCheng/webprism/gen/go/v1;webprismv1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+// ProxyService - 代理服務
+service ProxyService {
+  // 執行代理請求
+  rpc ExecuteProxy(ExecuteProxyRequest) returns (ExecuteProxyResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/proxy"
+      body: "*"
+    };
+  }
+}
+
+// ========== Messages ==========
+
+// ExecuteProxyRequest - 執行代理請求
+message ExecuteProxyRequest {
+  string spec_id = 1;                        // API 規格 ID
+  string operation_id = 2;                   // Operation ID
+  map<string, string> parameters = 3;        // 請求參數
+  google.protobuf.Struct body = 4;           // 請求 Body（可選）
+}
+
+// ExecuteProxyResponse - 執行代理回應
+message ExecuteProxyResponse {
+  int32 status_code = 1;                     // HTTP 狀態碼
+  map<string, string> headers = 2;           // 回應 Headers
+  google.protobuf.Struct body = 3;           // 回應 Body
+  ProxyError error = 4;                      // 錯誤資訊（如果有）
+}
+
+// ProxyError - 代理錯誤
+message ProxyError {
+  string code = 1;
+  string message = 2;
+  ErrorType type = 3;
+  google.protobuf.Struct details = 4;
+}
+
+// ErrorType - 錯誤類型
+enum ErrorType {
+  ERROR_TYPE_UNSPECIFIED = 0;
+  ERROR_TYPE_SYSTEM = 1;      // WEBPRISM 內部錯誤
+  ERROR_TYPE_CLIENT = 2;      // 客戶端請求錯誤
+  ERROR_TYPE_EXTERNAL = 3;    // 外部 API 錯誤
+}

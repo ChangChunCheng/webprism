@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package webprism.v1;
+
+option go_package = "github.com/ChangChunCheng/webprism/gen/go/v1;webprismv1";
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+// AuthService - 認證管理服務
+service AuthService {
+  // 設定認證配置
+  rpc SetAuthConfig(SetAuthConfigRequest) returns (SetAuthConfigResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/specs/{spec_id}/auth"
+      body: "*"
+    };
+  }
+
+  // 獲取認證配置
+  rpc GetAuthConfig(GetAuthConfigRequest) returns (GetAuthConfigResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/specs/{spec_id}/auth"
+    };
+  }
+}
+
+// ========== Messages ==========
+
+// SetAuthConfigRequest - 設定認證配置請求
+message SetAuthConfigRequest {
+  string spec_id = 1;
+  AuthType auth_type = 2;
+  map<string, string> credentials = 3;  // 認證憑證（將被加密儲存）
+  AuthPosition position = 4;             // 認證位置
+}
+
+// AuthPosition - 認證位置
+enum AuthPosition {
+  AUTH_POSITION_UNSPECIFIED = 0;
+  AUTH_POSITION_HEADER = 1;
+  AUTH_POSITION_QUERY = 2;
+  AUTH_POSITION_BODY = 3;
+}
+
+// AuthType - 認證類型
+enum AuthType {
+  AUTH_TYPE_UNSPECIFIED = 0;
+  AUTH_TYPE_API_KEY = 1;
+  AUTH_TYPE_BEARER = 2;
+  AUTH_TYPE_BASIC = 3;
+  AUTH_TYPE_OAUTH2 = 4;
+}
+
+// SetAuthConfigResponse - 設定認證配置回應
+message SetAuthConfigResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// GetAuthConfigRequest - 獲取認證配置請求
+message GetAuthConfigRequest {
+  string spec_id = 1;
+}
+
+// GetAuthConfigResponse - 獲取認證配置回應
+message GetAuthConfigResponse {
+  string spec_id = 1;
+  AuthType auth_type = 2;
+  AuthPosition position = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  // 注意：不回傳實際的 credentials，僅回傳配置資訊
+}

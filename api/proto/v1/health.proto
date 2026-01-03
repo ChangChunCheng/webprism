@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package webprism.v1;
+
+option go_package = "github.com/ChangChunCheng/webprism/gen/go/v1;webprismv1";
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+// HealthService - 健康檢查服務
+service HealthService {
+  // 執行健康檢查
+  rpc CheckHealth(CheckHealthRequest) returns (CheckHealthResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/specs/{spec_id}/health-check"
+    };
+  }
+
+  // 獲取健康檢查歷史
+  rpc GetHealthHistory(GetHealthHistoryRequest) returns (GetHealthHistoryResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/specs/{spec_id}/health-check"
+    };
+  }
+}
+
+// ========== Messages ==========
+
+// CheckHealthRequest - 執行健康檢查請求
+message CheckHealthRequest {
+  string spec_id = 1;
+}
+
+// CheckHealthResponse - 執行健康檢查回應
+message CheckHealthResponse {
+  HealthCheckResult result = 1;
+}
+
+// GetHealthHistoryRequest - 獲取健康檢查歷史請求
+message GetHealthHistoryRequest {
+  string spec_id = 1;
+  int32 limit = 2;  // 限制返回數量（預設 10）
+}
+
+// GetHealthHistoryResponse - 獲取健康檢查歷史回應
+message GetHealthHistoryResponse {
+  repeated HealthCheckResult results = 1;
+}
+
+// HealthCheckResult - 健康檢查結果
+message HealthCheckResult {
+  string id = 1;
+  string spec_id = 2;
+  string check_url = 3;
+  HealthStatus status = 4;
+  int32 response_time_ms = 5;
+  google.protobuf.Timestamp checked_at = 6;
+  string error_message = 7;
+}
+
+// HealthStatus - 健康狀態
+enum HealthStatus {
+  HEALTH_STATUS_UNSPECIFIED = 0;
+  HEALTH_STATUS_UP = 1;
+  HEALTH_STATUS_DOWN = 2;
+  HEALTH_STATUS_DEGRADED = 3;
+}
