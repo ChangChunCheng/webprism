@@ -13,6 +13,7 @@ import (
 	"github.com/ChangChunCheng/webprism/internal/infrastructure/crypto"
 	"github.com/ChangChunCheng/webprism/internal/infrastructure/database"
 	"github.com/ChangChunCheng/webprism/internal/infrastructure/logger"
+	"github.com/ChangChunCheng/webprism/internal/version"
 )
 
 func main() {
@@ -37,7 +38,17 @@ func main() {
 		_ = log.Sync()
 	}()
 
-	log.Info("Starting WEBPRISM MCP server...")
+	// 顯示版本資訊
+	versionInfo := version.Get()
+	log.Info("Starting WEBPRISM MCP server...",
+		logger.String("version", versionInfo.FullVersion()),
+		logger.String("git_commit", versionInfo.GitCommit),
+		logger.String("git_branch", versionInfo.GitBranch),
+		logger.String("build_time", versionInfo.BuildTime),
+		logger.String("go_version", versionInfo.GoVersion),
+		logger.String("platform", versionInfo.Platform),
+		logger.Bool("development", versionInfo.IsDevelopment()),
+	)
 
 	// Initialize database
 	db, err := database.NewPostgresDB(cfg.Database, log)

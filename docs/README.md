@@ -20,8 +20,9 @@
 **從這裡開始** → [development/CONTRIBUTING.md](development/CONTRIBUTING.md)
 
 1. **[開發指南](development/CONTRIBUTING.md)** - 開發環境設置與工作流程（推薦）
-2. [當前狀態](development/CURRENT_STATUS.md) - 專案當前進度
-3. [測試指南](testing/QUICK_START.md) - 測試執行與覆蓋率
+2. **[版本管理指南](VERSION_MANAGEMENT.md)** - 版本類型、構建流程和 Release 發布（必讀）
+3. [當前狀態](development/CURRENT_STATUS.md) - 專案當前進度
+4. [測試指南](testing/QUICK_START.md) - 測試執行與覆蓋率
 
 ### 🧪 我要執行測試
 
@@ -39,6 +40,7 @@
 docs/
 ├── README.md                          # 📍 你在這裡 - 文件導航中心
 ├── GETTING_STARTED.md                 # 🚀 使用者快速開始指南
+├── VERSION_MANAGEMENT.md              # 🏷️  版本管理與構建指南
 │
 ├── user-guide/                        # 👤 使用者指南
 │   ├── 01-INSTALLATION.md             # 安裝指南
@@ -139,6 +141,7 @@ docs/
 | 文件 | 說明 | 適合對象 |
 | --- | --- | --- |
 | **[GETTING_STARTED.md](GETTING_STARTED.md)** | **使用者快速開始指南** | 新使用者（推薦） |
+| **[VERSION_MANAGEMENT.md](VERSION_MANAGEMENT.md)** | **版本管理與構建指南** | 開發者（必讀） |
 | **[development/CONTRIBUTING.md](development/CONTRIBUTING.md)** | **開發者貢獻指南** | 開發者（推薦） |
 
 ### 👤 使用者指南 (User Guide)
@@ -193,6 +196,9 @@ make run-server
 # 閱讀開發指南
 open docs/development/CONTRIBUTING.md
 
+# 閱讀版本管理指南
+open docs/VERSION_MANAGEMENT.md
+
 # 設置開發環境
 make check-tools
 make setup
@@ -224,6 +230,8 @@ open docs/development/ISSUES_FIXED.md
 ## 🔍 按關鍵字搜尋
 
 - **新手入門**: [GETTING_STARTED.md](GETTING_STARTED.md)
+- **版本管理**: [VERSION_MANAGEMENT.md](VERSION_MANAGEMENT.md)
+- **構建發布**: [VERSION_MANAGEMENT.md](VERSION_MANAGEMENT.md)
 - **開發環境**: [development/CONTRIBUTING.md](development/CONTRIBUTING.md)
 - **安裝工具**: [user-guide/03-INSTALL_TOOLS.md](user-guide/03-INSTALL_TOOLS.md)
 - **Docker**: [GETTING_STARTED.md](GETTING_STARTED.md#啟動模式)

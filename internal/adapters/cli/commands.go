@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 
 	webprismv1 "github.com/ChangChunCheng/webprism/gen/go/v1"
+	"github.com/ChangChunCheng/webprism/internal/version"
 )
 
 // ==================== AUTH COMMAND ====================
@@ -244,8 +245,44 @@ func runHealthGet(cmd *cobra.Command, args []string) error {
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version number",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("WEBPRISM v1.0.0")
-	},
+	Short: "Print version information",
+	Long:  "Display detailed version and build information for WEBPRISM CLI",
+	Run:   runVersion,
+}
+
+func init() {
+	versionCmd.Flags().Bool("short", false, "Print short version info")
+	versionCmd.Flags().BoolP("json", "j", false, "Output as JSON")
+}
+
+func runVersion(cmd *cobra.Command, args []string) {
+	short, _ := cmd.Flags().GetBool("short")
+	jsonOutput, _ := cmd.Flags().GetBool("json")
+
+	versionInfo := version.Get()
+
+	if jsonOutput {
+		data, _ := json.MarshalIndent(versionInfo, "", "  ")
+		fmt.Println(string(data))
+		return
+	}
+
+	if short {
+		fmt.Println(versionInfo.Short())
+		return
+	}
+
+	// 完整版本資訊
+	releaseType := versionInfo.GetReleaseType()
+
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Printf("  WEBPRISM CLI [%s]\n", releaseType)
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Printf("  Version:     %s\n", versionInfo.FullVersion())
+	fmt.Printf("  Git Commit:  %s\n", versionInfo.GitCommit)
+	fmt.Printf("  Git Branch:  %s\n", versionInfo.GitBranch)
+	fmt.Printf("  Build Time:  %s\n", versionInfo.BuildTime)
+	fmt.Printf("  Go Version:  %s\n", versionInfo.GoVersion)
+	fmt.Printf("  Platform:    %s\n", versionInfo.Platform)
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 }

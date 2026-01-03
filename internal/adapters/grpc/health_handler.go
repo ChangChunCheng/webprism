@@ -11,6 +11,7 @@ import (
 	"github.com/ChangChunCheng/webprism/internal/domain/model"
 	"github.com/ChangChunCheng/webprism/internal/infrastructure/logger"
 	"github.com/ChangChunCheng/webprism/internal/ports/input"
+	"github.com/ChangChunCheng/webprism/internal/version"
 )
 
 // HealthServiceServer implements the gRPC HealthService server.
@@ -106,4 +107,20 @@ func (s *HealthServiceServer) toProtoHealthStatus(domainStatus model.HealthStatu
 	default:
 		return webprismv1.HealthStatus_HEALTH_STATUS_DOWN
 	}
+}
+
+// GetVersion returns the version information of the server.
+func (s *HealthServiceServer) GetVersion(ctx context.Context, req *webprismv1.GetVersionRequest) (*webprismv1.GetVersionResponse, error) {
+	s.logger.Debug("gRPC GetVersion called")
+
+	versionInfo := version.Get()
+
+	return &webprismv1.GetVersionResponse{
+		Version:   versionInfo.Version,
+		GitCommit: versionInfo.GitCommit,
+		GitBranch: versionInfo.GitBranch,
+		BuildTime: versionInfo.BuildTime,
+		GoVersion: versionInfo.GoVersion,
+		Platform:  versionInfo.Platform,
+	}, nil
 }

@@ -65,11 +65,21 @@ help: ## 顯示幫助資訊
 		sed 's/^\([^:]*\):.*## \(.*\)/\1|\2/' | \
 		awk -F'|' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo ""
+	@echo "\033[1;35m🚀 Release 管理\033[0m"
+	@grep -hE '^(release-check|release-tag|release-build|release-info):.*?## .*$$' $(MAKEFILE_LIST) | \
+		sed 's/^\([^:]*\):.*## \(.*\)/\1|\2/' | \
+		awk -F'|' '{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "  \033[1;32m推薦工作流程:\033[0m"
 	@echo "  1️⃣  初次設定: \033[36mmake setup\033[0m"
 	@echo "  2️⃣  啟動資料庫: \033[36mmake db-up\033[0m"
 	@echo "  3️⃣  執行應用: \033[36mmake run-server\033[0m (或 run-mcp, run-cli)"
+	@echo ""
+	@echo "  \033[1;35m發布版本:\033[0m"
+	@echo "  1️⃣  查看狀態: \033[36mmake release-info\033[0m"
+	@echo "  2️⃣  創建 tag: \033[36mmake release-tag VERSION=v1.0.0\033[0m"
+	@echo "  3️⃣  構建發布: \033[36mmake release-build\033[0m"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # 生成 Protobuf 程式碼
@@ -101,14 +111,37 @@ deps: ## 安裝 Go 依賴
 	@go mod tidy
 	@echo "Dependencies installed!"
 
+# 構建資訊變數
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+GIT_COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null || echo "unknown")
+GIT_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+BUILD_TIME ?= $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
+GO_VERSION ?= $(shell go version | awk '{print $$3}')
+PLATFORM ?= $(shell go env GOOS)/$(shell go env GOARCH)
+
+# 構建標記（ldflags）
+LDFLAGS := -X 'github.com/ChangChunCheng/webprism/internal/version.Version=$(VERSION)' \
+	-X 'github.com/ChangChunCheng/webprism/internal/version.GitCommit=$(GIT_COMMIT)' \
+	-X 'github.com/ChangChunCheng/webprism/internal/version.GitBranch=$(GIT_BRANCH)' \
+	-X 'github.com/ChangChunCheng/webprism/internal/version.BuildTime=$(BUILD_TIME)'
+
 # 建置專案
 build: ## 建置所有二進位檔案
+	@echo "Building with version info:"
+	@echo "  Version:    $(VERSION)"
+	@echo "  Git Commit: $(GIT_COMMIT)"
+	@echo "  Git Branch: $(GIT_BRANCH)"
+	@echo "  Build Time: $(BUILD_TIME)"
+	@echo "  Go Version: $(GO_VERSION)"
+	@echo "  Platform:   $(PLATFORM)"
+	@echo ""
+	@mkdir -p bin
 	@echo "Building webprism-server..."
-	@go build -o bin/webprism-server cmd/server/main.go
+	@go build -ldflags "$(LDFLAGS)" -o bin/webprism-server cmd/server/main.go
 	@echo "Building webprism-mcp..."
-	@go build -o bin/webprism-mcp cmd/mcp/main.go
+	@go build -ldflags "$(LDFLAGS)" -o bin/webprism-mcp cmd/mcp/main.go
 	@echo "Building webprism-cli..."
-	@go build -o bin/webprism cmd/cli/main.go
+	@go build -ldflags "$(LDFLAGS)" -o bin/webprism cmd/cli/main.go
 	@echo "Build complete!"
 
 # 執行測試
@@ -272,6 +305,64 @@ fmt: ## 格式化程式碼
 	@echo "Formatting code..."
 	@go fmt ./...
 	@echo "Code formatted!"
+
+# ============================================
+# Release 管理
+# ============================================
+
+.PHONY: release-check
+release-check: ## 檢查是否可以發布（無未提交變更）
+	@echo "Checking release readiness..."
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "❌ Error: Working directory is not clean"; \
+		echo "Please commit all changes before creating a release"; \
+		exit 1; \
+	fi
+	@echo "✅ Working directory is clean"
+	@echo "Current version: $$(git describe --tags --always 2>/dev/null || echo 'no tags')"
+
+.PHONY: release-tag
+release-tag: release-check ## 創建 release tag (usage: make release-tag VERSION=v1.0.0)
+	@if [ -z "$(VERSION)" ]; then \
+		echo "❌ Error: VERSION is required"; \
+		echo "Usage: make release-tag VERSION=v1.0.0"; \
+		exit 1; \
+	fi
+	@echo "Creating release tag $(VERSION)..."
+	@git tag -a $(VERSION) -m "Release $(VERSION)"
+	@echo "✅ Tag $(VERSION) created successfully"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Push tag: git push origin $(VERSION)"
+	@echo "  2. Build release: make release-build"
+
+.PHONY: release-build
+release-build: release-check build ## 構建 release 版本（確保乾淨狀態）
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "  Release Build Complete"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "  Version:    $(VERSION)"
+	@echo "  Binaries:   bin/"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+.PHONY: release-info
+release-info: ## 顯示當前版本資訊
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "  Current Version Information"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "  Version:     $(VERSION)"
+	@echo "  Git Commit:  $(GIT_COMMIT)"
+	@echo "  Git Branch:  $(GIT_BRANCH)"
+	@if [ -z "$$(git status --porcelain)" ]; then \
+		echo "  Clean:       Yes"; \
+	else \
+		echo "  Clean:       No (has uncommitted changes)"; \
+	fi
+	@echo ""
+	@echo "  All Tags:"
+	@git tag -l | sed 's/^/    /' || echo "    (no tags)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # 安裝開發工具到專案本地
 install-tools: ## 安裝開發工具到專案本地 GOPATH

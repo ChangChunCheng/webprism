@@ -22,6 +22,13 @@ service HealthService {
       get: "/api/v1/specs/{spec_id}/health-check"
     };
   }
+
+  // 獲取系統版本資訊
+  rpc GetVersion(GetVersionRequest) returns (GetVersionResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/version"
+    };
+  }
 }
 
 // ========== Messages ==========
@@ -64,4 +71,19 @@ enum HealthStatus {
   HEALTH_STATUS_UP = 1;
   HEALTH_STATUS_DOWN = 2;
   HEALTH_STATUS_DEGRADED = 3;
+}
+
+// GetVersionRequest - 獲取版本資訊請求
+message GetVersionRequest {
+  // 空請求
+}
+
+// GetVersionResponse - 獲取版本資訊回應
+message GetVersionResponse {
+  string version = 1;       // 版本號（例如：v1.0.0）
+  string git_commit = 2;    // Git commit hash
+  string git_branch = 3;    // Git 分支名稱
+  string build_time = 4;    // 構建時間（RFC3339 格式）
+  string go_version = 5;    // Go 編譯器版本
+  string platform = 6;      // 目標平台（OS/Arch）
 }
