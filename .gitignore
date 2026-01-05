@@ -96,3 +96,7 @@ docs/testing/*
 
 # Claude Code temporary files
 .tasks/
+
+# Node.js test environment (tests/mcp/)
+tests/mcp/node_modules/
+tests/mcp/package-lock.json
