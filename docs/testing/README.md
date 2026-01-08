@@ -1,17 +1,24 @@
 # WEBPRISM 測試指南
 
-**狀態**: ✅ 單元測試完成 (95.2% 覆蓋率)
+**狀態**: ✅ 單元測試完成 (95.2% 覆蓋率) | ✅ 整合測試完成
 
 ---
 
 ## 🎯 快速開始
 
-如果你想執行測試或了解測試系統,請參考:
+### 測試類型
 
-- **[QUICK_START.md](QUICK_START.md)** - 測試快速指南
-  - 如何執行測試
-  - 常用命令
-  - 故障排除
+WEBPRISM 提供多種測試類型：
+
+- **[QUICK_START.md](QUICK_START.md)** - 單元測試快速指南
+  - 如何執行單元測試
+  - 測試覆蓋率報告
+  - Mock 管理
+
+- **[INTEGRATION_TEST_GUIDE.md](INTEGRATION_TEST_GUIDE.md)** - 整合測試指南 ⭐ 推薦
+  - 完整的 API 工作流程測試
+  - 與真實外部 API 整合
+  - 自動化測試腳本
 
 ---
 
@@ -26,37 +33,56 @@
 ✅ 執行時間: 0.273s
 ```
 
+### 整合測試
+
+```
+✅ 測試腳本: scripts/test-petstore-full.sh
+✅ 測試步驟: 10 個步驟
+✅ OpenAPI 支援: 3.0.4, Swagger 2.0
+✅ 認證類型: API Key, Bearer Token
+✅ 參數類型: Path, Query, Header, Body
+```
+
 ### 測試覆蓋範圍
 
-| 模組 | 覆蓋率 | 狀態 |
-|------|--------|------|
-| SpecService | 100% | ✅ |
-| AuthService | 95.2% | ✅ |
-| ProxyService | 93.1% | ✅ |
-| HealthService | 93.8% | ✅ |
+| 模組 | 單元測試覆蓋率 | 整合測試 | 狀態 |
+| ------ | ---------------- | ---------- | ------ |
+| SpecService | 100% | ✅ | ✅ |
+| AuthService | 95.2% | ✅ | ✅ |
+| ProxyService | 93.1% | ✅ | ✅ |
+| HealthService | 93.8% | ✅ | ✅ |
 
 ---
 
 ## 🧪 執行測試
 
-### 執行所有測試
+### 執行單元測試
 
 ```bash
+# 執行所有單元測試
 make test
-```
 
-### 執行特定服務測試
-
-```bash
-# SpecService 測試
+# 執行特定服務測試
 go test -v ./internal/domain/service/ -run TestSpecService
-
-# AuthService 測試
 go test -v ./internal/domain/service/ -run TestAuthService
-
-# ProxyService 測試
 go test -v ./internal/domain/service/ -run TestProxyService
 ```
+
+### 執行整合測試 ⭐ 推薦
+
+```bash
+# 1. 啟動服務
+make db-up        # 啟動資料庫
+make run-server   # 啟動 WEBPRISM (另一個終端)
+
+# 2. 執行完整整合測試
+./scripts/test-petstore-full.sh
+
+# 3. 查看測試日誌
+ls -lh /tmp/webprism-test-petstore-full-*.log
+```
+
+詳細說明請參考 [整合測試指南](INTEGRATION_TEST_GUIDE.md)
 
 ### 查看測試覆蓋率
 

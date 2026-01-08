@@ -16,15 +16,17 @@ import (
 // ProxyServiceServer implements the gRPC ProxyService server.
 type ProxyServiceServer struct {
 	webprismv1.UnimplementedProxyServiceServer
-	service input.ProxyService
-	logger  *logger.Logger
+	service    input.ProxyService
+	specRepo   input.SpecService // Need to access spec to categorize parameters
+	logger     *logger.Logger
 }
 
 // NewProxyServiceServer creates a new ProxyServiceServer.
-func NewProxyServiceServer(service input.ProxyService, log *logger.Logger) *ProxyServiceServer {
+func NewProxyServiceServer(service input.ProxyService, specService input.SpecService, log *logger.Logger) *ProxyServiceServer {
 	return &ProxyServiceServer{
-		service: service,
-		logger:  log,
+		service:  service,
+		specRepo: specService,
+		logger:   log,
 	}
 }
 
@@ -36,19 +38,28 @@ func (s *ProxyServiceServer) ExecuteProxy(ctx context.Context, req *webprismv1.E
 	)
 
 	// Convert protobuf request to domain ProxyRequest
-	// Note: protobuf uses simple map<string,string> for parameters
-	// We'll parse query params from parameters map (prefixed with "query_")
-	// and headers from parameters map (prefixed with "header_")
 	bodyMap := make(map[string]interface{})
 	if req.Body != nil {
 		bodyMap = req.Body.AsMap()
+	}
+
+	// Categorize parameters based on OpenAPI spec
+	pathParams, queryParams, err := s.categorizeParameters(ctx, req.SpecId, req.OperationId, req.Parameters)
+	if err != nil {
+		s.logger.Warn("failed to categorize parameters, treating all as query params",
+			logger.Any("error", err),
+		)
+		// Fallback: treat all as query params
+		pathParams = make(map[string]string)
+		queryParams = req.Parameters
 	}
 
 	domainReq := &model.ProxyRequest{
 		SpecID:      req.SpecId,
 		OperationID: req.OperationId,
 		Parameters: model.ProxyParameters{
-			Query:   req.Parameters, // Simple pass-through for now
+			Path:    pathParams,
+			Query:   queryParams,
 			Headers: make(map[string]string),
 			Body:    bodyMap,
 		},
@@ -125,4 +136,60 @@ func (s *ProxyServiceServer) toProtoErrorType(domainType model.ErrorType) webpri
 	default:
 		return webprismv1.ErrorType_ERROR_TYPE_SYSTEM
 	}
+}
+
+// categorizeParameters categorizes parameters into path and query parameters
+// based on the OpenAPI specification.
+func (s *ProxyServiceServer) categorizeParameters(ctx context.Context, specID, operationID string, params map[string]string) (path, query map[string]string, err error) {
+	path = make(map[string]string)
+	query = make(map[string]string)
+
+	// Get the spec to understand parameter types
+	spec, err := s.specRepo.GetSpec(ctx, specID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Find the operation to get parameter definitions
+	var operation *model.Operation
+	for _, pathItem := range spec.Paths {
+		if pathItem.Operations != nil {
+			for _, op := range pathItem.Operations {
+				if op.OperationID == operationID {
+					operation = op
+					break
+				}
+			}
+		}
+		if operation != nil {
+			break
+		}
+	}
+
+	if operation == nil {
+		// If we can't find the operation, treat all as query params
+		return path, params, nil
+	}
+
+	// Categorize parameters based on their definition in the operation
+	for paramName, paramValue := range params {
+		// Check if this parameter is defined in the operation
+		isPathParam := false
+		if operation.Parameters != nil {
+			for _, param := range operation.Parameters {
+				if param.Name == paramName && param.In == "path" {
+					isPathParam = true
+					break
+				}
+			}
+		}
+
+		if isPathParam {
+			path[paramName] = paramValue
+		} else {
+			query[paramName] = paramValue
+		}
+	}
+
+	return path, query, nil
 }

@@ -93,6 +93,7 @@ docs/testing/*
 !docs/testing/README.md
 !docs/testing/QUICK_START.md
 !docs/testing/COMPLETION_SUMMARY.md
+!docs/testing/INTEGRATION_TEST_GUIDE.md
 
 # Claude Code temporary files
 .tasks/

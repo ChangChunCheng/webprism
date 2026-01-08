@@ -1,13 +1,40 @@
 # WEBPRISM 測試資料說明
 
-本目錄包含用於測試 WEBPRISM 的 OpenAPI 規格檔案。
+本目錄包含用於測試 WEBPRISM 的 OpenAPI/Swagger 規格檔案。
 
-## 📋 包含的範例檔案
+## 📋 包含的測試檔案
+
+### petstore-openapi3.json
+
+- **用途**: Petstore API - OpenAPI 3.0.4 規格
+- **版本**: OpenAPI 3.0.4
+- **來源**: <https://petstore3.swagger.io/>
+- **Base URL**: `https://petstore3.swagger.io/api/v3`
+- **狀態**: ✅ 已驗證可用
+- **測試腳本**: `scripts/test-petstore-full.sh` (Step 2)
+- **特性**:
+  - 完整的 CRUD 操作
+  - 支援 API Key 認證
+  - 包含 Path Parameters 和 Query Parameters 範例
+
+### petstore-full.json
+
+- **用途**: Petstore API - Swagger 2.0 規格
+- **版本**: Swagger 2.0
+- **來源**: <https://petstore.swagger.io/>
+- **Base URL**: `https://petstore.swagger.io/v2`
+- **狀態**: ✅ 已驗證可用
+- **測試腳本**: `scripts/test-petstore-full.sh` (Step 8)
+- **特性**:
+  - Swagger 2.0 格式測試
+  - 自動轉換為 OpenAPI 3.0
+  - 支援 Bearer Token 和 API Key 認證
 
 ### petstore-simple.json
-- **用途**: 簡單的 Petstore API 範例，用於基本功能測試
+
+- **用途**: 簡化版 Petstore API 範例（已棄用，建議使用上述兩個檔案）
 - **來源**: OpenAPI 官方範例
-- **狀態**: ✅ 已驗證可用
+- **狀態**: ⚠️ 已棄用
 - **大小**: 約 1.5KB (72 行)
 
 ## 🔧 添加自己的測試資料

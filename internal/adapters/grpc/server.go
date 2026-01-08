@@ -43,7 +43,7 @@ func NewServer(
 	// Register services
 	specpb.RegisterSpecServiceServer(grpcServer, NewSpecServiceServer(specService, log))
 	authpb.RegisterAuthServiceServer(grpcServer, NewAuthServiceServer(authService, log))
-	proxypb.RegisterProxyServiceServer(grpcServer, NewProxyServiceServer(proxyService, log))
+	proxypb.RegisterProxyServiceServer(grpcServer, NewProxyServiceServer(proxyService, specService, log))
 	healthpb.RegisterHealthServiceServer(grpcServer, NewHealthServiceServer(healthService, log))
 
 	// Enable reflection for grpcurl and other tools
