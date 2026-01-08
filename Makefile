@@ -26,8 +26,13 @@ help: ## 顯示幫助資訊
 		sed 's/^\([^:]*\):.*## \(.*\)/\1|\2/' | \
 		awk -F'|' '{printf "    \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 	@echo ""
-	@echo "  \033[1;33m▸ 應用程式執行\033[0m"
+	@echo "  \033[1;33m▸ 應用程式執行（go run - 開發用）\033[0m"
 	@grep -hE '^(run-server|run-mcp|run-cli|dev):.*?## .*$$' $(MAKEFILE_LIST) | \
+		sed 's/^\([^:]*\):.*## \(.*\)/\1|\2/' | \
+		awk -F'|' '{printf "    \033[36m%-18s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+	@echo "  \033[1;33m▸ 應用程式執行（bin - 含完整版本資訊）\033[0m"
+	@grep -hE '^(run-server-bin|run-mcp-bin|run-cli-bin):.*?## .*$$' $(MAKEFILE_LIST) | \
 		sed 's/^\([^:]*\):.*## \(.*\)/\1|\2/' | \
 		awk -F'|' '{printf "    \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 	@echo ""
@@ -199,6 +204,56 @@ run-cli: ## 執行 CLI（讀取 .env）
 		exit 1; \
 	fi
 	@go run cmd/cli/main.go
+
+# ============================================
+# 執行已建置的 bin 檔案（含完整版本資訊）
+# ============================================
+
+run-server-bin: ## 執行已建置的 webprism-server（含版本資訊，讀取 .env）
+	@if [ ! -f .env ]; then \
+		echo "❌ Error: .env file not found"; \
+		echo "Please run: cp .env.example .env"; \
+		echo "Then edit .env to configure secrets"; \
+		exit 1; \
+	fi
+	@if [ ! -f bin/webprism-server ]; then \
+		echo "❌ Error: bin/webprism-server not found"; \
+		echo "Please run: make build"; \
+		exit 1; \
+	fi
+	@echo "Starting webprism-server from bin/ (with version info)..."
+	@echo "Environment loaded from .env"
+	@set -a && . ./.env && set +a && ./bin/webprism-server
+
+run-mcp-bin: ## 執行已建置的 webprism-mcp（含版本資訊，讀取 .env）
+	@if [ ! -f .env ]; then \
+		echo "❌ Error: .env file not found"; \
+		echo "Please run: cp .env.example .env"; \
+		echo "Then edit .env to configure secrets"; \
+		exit 1; \
+	fi
+	@if [ ! -f bin/webprism-mcp ]; then \
+		echo "❌ Error: bin/webprism-mcp not found"; \
+		echo "Please run: make build"; \
+		exit 1; \
+	fi
+	@echo "Starting webprism-mcp from bin/ (with version info)..."
+	@echo "Environment loaded from .env"
+	@set -a && . ./.env && set +a && ./bin/webprism-mcp
+
+run-cli-bin: ## 執行已建置的 webprism CLI（含版本資訊，讀取 .env）
+	@if [ ! -f .env ]; then \
+		echo "❌ Error: .env file not found"; \
+		echo "Please run: cp .env.example .env"; \
+		echo "Then edit .env to configure secrets"; \
+		exit 1; \
+	fi
+	@if [ ! -f bin/webprism ]; then \
+		echo "❌ Error: bin/webprism not found"; \
+		echo "Please run: make build"; \
+		exit 1; \
+	fi
+	@set -a && . ./.env && set +a && ./bin/webprism $(ARGS)
 
 # 資料庫遷移（向上）
 migrate-up: ## 執行資料庫遷移（向上）
