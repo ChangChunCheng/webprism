@@ -73,6 +73,8 @@ temp/
 testdata/*
 !testdata/.gitkeep
 !testdata/README.md
+!testdata/petstore-openapi3.json
+!testdata/petstore-full.json
 !testdata/petstore-simple.json
 
 # Database (local development)
