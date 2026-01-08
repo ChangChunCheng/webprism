@@ -208,6 +208,7 @@ mockery  # 重新生成所有 mocks
 
 ## 📚 相關文件
 
+- [API 測試指南](./API_TESTING_GUIDE.md) - HTTP/gRPC API 測試完整範例
 - [完整測試報告](./UNIT_TEST_REPORT.md) - 詳細的測試分析
 - [測試策略](./TESTING_STRATEGY.md) - 整體測試規劃
 - [工作總結](../development/WORK_SUMMARY_2026-01-01_UNIT_TESTS.md) - 開發過程記錄

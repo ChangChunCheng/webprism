@@ -59,10 +59,22 @@ func NewServer(httpPort, grpcPort int, log *logger.Logger) (*Server, error) {
 		return nil, fmt.Errorf("failed to register HealthService handler: %w", err)
 	}
 
+	// Create main HTTP mux to handle both API and Swagger UI
+	mainMux := http.NewServeMux()
+
+	// Register Swagger UI and documentation handlers
+	registerSwaggerHandlers(mainMux)
+
+	// Register API handlers (everything under /api)
+	mainMux.Handle("/api/", mux)
+
+	// Add version endpoint at root level
+	mainMux.Handle("/api/v1/version", mux)
+
 	// Create HTTP handler with middleware
 	handler := corsMiddleware(
 		loggingMiddleware(log,
-			mux,
+			mainMux,
 		),
 	)
 
@@ -84,16 +96,101 @@ func NewServer(httpPort, grpcPort int, log *logger.Logger) (*Server, error) {
 
 // Start starts the HTTP server.
 func (s *Server) Start() error {
-	s.logger.Info("HTTP server starting",
-		logger.String("addr", s.httpServer.Addr),
-		logger.Int("grpc_port", s.grpcPort),
-	)
+	port := s.httpServer.Addr
+	if port == "" || port[0] != ':' {
+		port = ":8080"
+	}
+
+	// Print friendly startup banner
+	s.printStartupBanner(port)
 
 	if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("HTTP server failed: %w", err)
 	}
 
 	return nil
+}
+
+// EndpointInfo represents an API endpoint information
+type EndpointInfo struct {
+	Method      string
+	Path        string
+	Description string
+}
+
+// getRegisteredEndpoints returns all registered endpoints from proto definitions
+func getRegisteredEndpoints() []EndpointInfo {
+	return []EndpointInfo{
+		// SpecService endpoints
+		{Method: "POST", Path: "/api/v1/specs", Description: "Upload API specification"},
+		{Method: "GET", Path: "/api/v1/specs", Description: "List all specifications"},
+		{Method: "GET", Path: "/api/v1/specs/{id}", Description: "Get specific specification"},
+		{Method: "DELETE", Path: "/api/v1/specs/{id}", Description: "Delete specification"},
+
+		// AuthService endpoints
+		{Method: "POST", Path: "/api/v1/specs/{spec_id}/auth", Description: "Set auth configuration"},
+		{Method: "GET", Path: "/api/v1/specs/{spec_id}/auth", Description: "Get auth configuration"},
+
+		// ProxyService endpoints
+		{Method: "POST", Path: "/api/v1/proxy", Description: "Execute proxy request"},
+
+		// HealthService endpoints
+		{Method: "POST", Path: "/api/v1/specs/{spec_id}/health-check", Description: "Check API health"},
+		{Method: "GET", Path: "/api/v1/specs/{spec_id}/health-check", Description: "Get health check history"},
+		{Method: "GET", Path: "/api/v1/version", Description: "Get system version"},
+	}
+}
+
+// printStartupBanner prints a user-friendly startup message with connection URLs
+func (s *Server) printStartupBanner(port string) {
+	portNum := port
+	if len(port) > 0 && port[0] == ':' {
+		portNum = port[1:]
+	}
+
+	// Get all registered endpoints
+	endpoints := getRegisteredEndpoints()
+
+	// Build endpoints list dynamically
+	endpointLines := ""
+	for _, ep := range endpoints {
+		// Format: METHOD /path - Description
+		endpointLines += fmt.Sprintf("║    • %-6s %-35s - %-28s ║\n",
+			ep.Method, ep.Path, ep.Description)
+	}
+
+	banner := fmt.Sprintf(`
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                        🚀 WEBPRISM Server Started                             ║
+╠═══════════════════════════════════════════════════════════════════════════════╣
+║                                                                               ║
+║  HTTP (REST API):                                                             ║
+║    → http://localhost:%s                                                     ║
+║                                                                               ║
+║  📚 API Documentation:                                                        ║
+║    → Swagger UI:  http://localhost:%s/swagger-ui/                           ║
+║    → OpenAPI JSON: http://localhost:%s/swagger.json                          ║
+║                                                                               ║
+║  gRPC:                                                                        ║
+║    → localhost:%d                                                            ║
+║                                                                               ║
+║  Available Endpoints:                                                         ║
+%s║                                                                               ║
+║  Quick Start:                                                                 ║
+║    curl http://localhost:%s/api/v1/version                                   ║
+║                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+`, portNum, portNum, portNum, s.grpcPort, endpointLines, portNum)
+
+	// Use fmt.Println for console output (always visible)
+	fmt.Println(banner)
+
+	// Also log to structured logger
+	s.logger.Info("HTTP server starting",
+		logger.String("http_url", fmt.Sprintf("http://localhost:%s", portNum)),
+		logger.String("grpc_addr", fmt.Sprintf("localhost:%d", s.grpcPort)),
+		logger.Int("total_endpoints", len(endpoints)),
+	)
 }
 
 // Stop gracefully stops the HTTP server.
